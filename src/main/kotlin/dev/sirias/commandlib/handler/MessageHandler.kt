@@ -10,25 +10,12 @@ import java.util.*
 class MessageHandler(private val commandService: CommandService, private val commandPrefixes: Array<out Char>) {
     fun handleMessage(message: Message) {
         val commandArgs = message.text.lowercase().split(" ").toTypedArray()
-        val payload = if (message.replyMessage != null) {
-            fromJson(message.replyMessage.payload)
-        } else if (message.fwdMessages.isNotEmpty()) {
-            fromJson(message.fwdMessages[0].payload)
-        } else null
 
         val fromId = message.fromId
 
-        if (payload != null && payload.has("user_id") && payload.get("user_id").asInt != fromId) return
+        if (fromId > 0) return
 
-        val command = commandService.getCommand(
-            if (payload == null) {
-                if (commandPrefixes.any { commandArgs[0].startsWith(it) }) {
-                    commandArgs[0].substring(1)
-                } else null
-            } else {
-                payload.get("command").asString
-            }) ?: return
-
+        val command = commandService.getCommand(commandArgs[0].substring(1))?: return
         val modifyArgs = commandArgs.copyOfRange(1, commandArgs.size)
 
         val defaultMean = command.defaultMean
@@ -49,9 +36,3 @@ fun <T> fromJson(json: JsonElement, clazz: Class<T>): T = GSON.fromJson(json, cl
 fun <T> fromJson(json: String, clazz: Class<T>): T = GSON.fromJson(json, clazz)
 
 fun fromJson(json: String) = fromJson(json, JsonObject::class.java)
-
-fun argsFromPayload(json: String) = fromJson(
-    fromJson(json, JsonObject::class.java)
-    .get("args")
-    .asJsonArray, Array<String>::class.java
-)
