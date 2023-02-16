@@ -29,8 +29,6 @@ class MessageHandler(private val commandService: CommandService, private val com
                 payload.get("command").asString
             }) ?: return
 
-        if (payload != null && !command.messageIds.containsValue(UUID.fromString(payload.get("unique_id")?.asString))) return
-
         val modifyArgs = commandArgs.copyOfRange(1, commandArgs.size)
 
         val defaultMean = command.defaultMean
