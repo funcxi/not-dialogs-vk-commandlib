@@ -4,6 +4,7 @@ import com.vk.api.sdk.actions.Messages
 import com.vk.api.sdk.client.VkApiClient
 import com.vk.api.sdk.client.actors.UserActor
 import com.vk.api.sdk.httpclient.HttpTransportClient
+import com.vk.api.sdk.objects.messages.Message
 import dev.sirias.commandlib.BaseCommand
 import dev.sirias.commandlib.model.sender.CommandSender
 import dev.sirias.commandlib.handler.MessageHandler
@@ -24,35 +25,15 @@ class CommandService(
 
     private val vk = VkApiClient(HttpTransportClient.getInstance())
     val vkMessages: Messages = vk.messages()
+    val longPollServer = vkMessages.getLongPollServer(userActor)
+    var ts = longPollServer.execute().ts
+    var maxMsgId = -1
 
     init {
         Executors.newSingleThreadScheduledExecutor().apply {
-            val longPollServer = vkMessages.getLongPollServer(userActor)
-            var ts = longPollServer.execute().ts
-            var maxMsgId = -1
 
             scheduleAtFixedRate({
-                val eventQuery = vkMessages
-                    .getLongPollHistory(userActor)
-                    .ts(ts)
-
-                if (maxMsgId > 0)
-                    eventQuery.maxMsgId(maxMsgId)
-
-                val message = eventQuery.execute()
-                    .messages.items
-
-                if (!message.isEmpty()) {
-                    ts = longPollServer.execute().ts
-
-                    if (!message[0].isOut) {
-                        val messageId = message[0].id
-
-                        if (messageId > maxMsgId)
-                            maxMsgId = messageId
-                    }
-                    messageHandler.handleMessage(message[0])
-                }
+                getMessage()?.let { messageHandler.handleMessage(it) }
                 
             }, 100, 120, TimeUnit.MILLISECONDS)
         }
@@ -88,6 +69,31 @@ class CommandService(
             if (command.commandNames.contains(commandName)) return command
         }
 
+        return null
+    }
+
+    fun getMessage(): Message? {
+        val eventQuery = vkMessages
+            .getLongPollHistory(userActor)
+            .ts(ts)
+
+        if (maxMsgId > 0)
+            eventQuery.maxMsgId(maxMsgId)
+
+        val message = eventQuery.execute()
+            .messages.items
+
+        if (!message.isEmpty()) {
+            ts = longPollServer.execute().ts
+
+            if (!message[0].isOut) {
+                val messageId = message[0].id
+
+                if (messageId > maxMsgId)
+                    maxMsgId = messageId
+            }
+            return message[0]
+        }
         return null
     }
 }
