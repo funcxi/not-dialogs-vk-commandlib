@@ -3,7 +3,6 @@ package dev.sirias.commandlib
 import dev.sirias.commandlib.annotation.Default
 import dev.sirias.commandlib.annotation.ExceptionHandler
 import dev.sirias.commandlib.annotation.SubCommand
-import dev.wasteix.commandlib.annotation.*
 import dev.sirias.commandlib.model.CommandEntity
 import dev.sirias.commandlib.model.SubCommandEntity
 import dev.sirias.commandlib.model.data.CommandContentData
