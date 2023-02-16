@@ -15,7 +15,7 @@ class MessageHandler(private val commandService: CommandService, private val com
 
         if (fromId > 0) return
 
-        val command = commandService.getCommand(commandArgs[0].substring(1))?: return
+        val command = commandService.getCommand(commandArgs[0])?: return
         val modifyArgs = commandArgs.copyOfRange(1, commandArgs.size)
 
         val defaultMean = command.defaultMean
