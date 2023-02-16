@@ -9,13 +9,13 @@ import java.util.*
 
 class MessageHandler(private val commandService: CommandService, private val commandPrefixes: Array<out Char>) {
     fun handleMessage(message: Message) {
-        val commandArgs = message.text.lowercase().split(" ").toTypedArray()
+        val commandArgs = message.text.trim().lowercase().split(" ").toTypedArray()
 
         val fromId = message.fromId
 
         if (fromId > 0) return
 
-        val command = commandService.getCommand(commandArgs[0].substring(1))?: return
+        val command = commandService.getCommand(commandArgs[0].substring(1).lowercase())?: return
         val modifyArgs = commandArgs.copyOfRange(1, commandArgs.size)
 
         val defaultMean = command.defaultMean
